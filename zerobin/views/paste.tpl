@@ -204,7 +204,7 @@
           </div>
           <input type="text" class="form-control paste-btc-tip-address" name="paste-btc-tip-address"
             placeholder="Put a BTC address to ask for a tip. Leave it empty to let us use our."
-            v-model="newPaste.btcTipAddress" maxlength="50">
+            v-model="newPaste.btcTipAddress" maxlength="128">
         </div>
 
       </div>

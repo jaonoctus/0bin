@@ -38,7 +38,10 @@ class Paste(object):
         self.content = content
         self.expiration = self.get_expiration(expiration)
         self.title = bleach.clean(title, strip=True)[:60]
-        self.btc_tip_address = bleach.clean(btc_tip_address, strip=True)[:50]
+        # 128 leaves room for BIP-352 silent payment addresses, which are 116
+        # characters on mainnet and 117 on testnet. Keep in sync with the
+        # maxlength of the tip input in home.tpl and paste.tpl.
+        self.btc_tip_address = bleach.clean(btc_tip_address, strip=True)[:128]
 
         if not uuid:
             # generate the uuid from the decoded content by hashing it
