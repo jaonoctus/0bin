@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 
 from datetime import datetime, timedelta
 
+import hashlib
+
 import bottle
 from bottle import (
     Bottle,
@@ -35,9 +37,28 @@ from zerobin.paste import Paste
 ensure_app_context()
 
 
+def static_files_version():
+    """
+        Short hash of the CSS and JS files referenced by base.tpl, appended to
+        their URLs so browsers drop cached copies whenever the files change.
+        Computed once at startup: restart the server after editing them.
+    """
+    digest = hashlib.sha1()
+    for name in (
+        "css/style.min.css",
+        "css/style.css",
+        "js/main.min.js",
+        "js/zerobin-crypto.js",
+        "js/behavior.js",
+    ):
+        digest.update((settings.STATIC_FILES_ROOT / name).read_bytes())
+    return digest.hexdigest()[:10]
+
+
 GLOBAL_CONTEXT = {
     "settings": settings,
     "VERSION": __version__,
+    "STATIC_VERSION": static_files_version(),
     "pastes_count": Paste.get_pastes_count(),
     "refresh_counter": datetime.now(),
 }

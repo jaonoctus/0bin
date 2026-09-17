@@ -118,7 +118,7 @@ stored in localStorage for the "previous pastes" menu. Owner key is what authori
 
 **Templates** (`zerobin/views/*.tpl`, Bottle SimpleTemplate): `base.tpl` swaps between the
 minified bundles and the individual source files based on `settings.DEBUG`, and appends
-`?{{ VERSION }}` for cache busting. Editing `behavior.js` or `style.css` has no visible effect
+`?{{ STATIC_VERSION }}`, a hash of the asset files computed at startup, for cache busting. Editing `behavior.js` or `style.css` has no visible effect
 in non-debug mode until you rerun `doit compress`; both minified outputs are committed.
 
 **Versioning**: the single source of truth is `zerobin/VERSION`, read by `zerobin/__init__.py`

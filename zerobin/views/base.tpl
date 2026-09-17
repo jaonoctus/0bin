@@ -11,12 +11,12 @@
   <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png" />
 
   %if not settings.DEBUG:
-  <link href="/static/css/style.min.css?{{ VERSION }}" rel="stylesheet" />
+  <link href="/static/css/style.min.css?{{ STATIC_VERSION }}" rel="stylesheet" />
   %else:
   <link href="/static/css/prettify.css" rel="stylesheet" />
   <link href="/static/css/desert.css" rel="stylesheet" />
   <link href="/static/css/bootswatch.4.5.css" rel="stylesheet">
-  <link href="/static/css/style.css?{{ VERSION }}" rel="stylesheet">
+  <link href="/static/css/style.css?{{ STATIC_VERSION }}" rel="stylesheet">
   %end
 
 </head>
@@ -122,12 +122,12 @@
   </div>
 
   %if not settings.DEBUG:
-  <script src="/static/js/main.min.js?{{ VERSION }}"></script>
+  <script src="/static/js/main.min.js?{{ STATIC_VERSION }}"></script>
   %else:
   <script src="/static/js/vue.js"></script>
   <script src="/static/js/noble-ciphers.js"></script>
-  <script src="/static/js/zerobin-crypto.js?{{ VERSION }}"></script>
-  <script src="/static/js/behavior.js?{{ VERSION }}"></script>
+  <script src="/static/js/zerobin-crypto.js?{{ STATIC_VERSION }}"></script>
+  <script src="/static/js/behavior.js?{{ STATIC_VERSION }}"></script>
   <script src="/static/js/prettify.min.js"></script>
   %end
 
