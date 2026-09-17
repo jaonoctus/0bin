@@ -22,9 +22,9 @@ To run zerobin, download zerobin.pyz from the latest release_ then:
 
     python zerobin.pyz
 
-0bin requires Python 3.7 or higher.
+0bin requires Python 3.10 or higher.
 
-You may need to type :code:`py -3.7 zerobin.pyz` on Windows, or :code:`python3.7 zerobin.pyz` on Mac/Linux, depending on your configuration.
+You may need to type :code:`py -3.10 zerobin.pyz` on Windows, or :code:`python3.10 zerobin.pyz` on Mac/Linux, depending on your configuration.
 
 If you are familiar with the Python ecosystem, you can also :code:`python -m pip install zerobin --user` and run :code:`python -m zerobin` for the same effect.
 
