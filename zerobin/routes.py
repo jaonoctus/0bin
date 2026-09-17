@@ -263,5 +263,8 @@ app = SessionMiddleware(
         "session.cookie_expires": 300,
         "session.data_dir": settings.SESSIONS_DIR,
         "session.auto": True,
+        # Beaker defaults to pickle for session files (CVE-2013-7489). The
+        # session only stores a boolean, so JSON is enough and safe.
+        "session.data_serializer": "json",
     },
 )
