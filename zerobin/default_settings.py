@@ -9,12 +9,10 @@ PORT = "3255"
 # Names/links to insert in the footer.
 #
 MENU = (
-    ("Github", "https://github.com/Tygs/0bin"),
+    ("Github", "https://github.com/jaonoctus/0bin"),
     ("Faq", "/faq/"),  # You probably want to keep this
     # Any link with "mailto:" will be escaped to limit spam, but displayed
-    # correctly to the user using JS.
-    ("Contact", "mailto:your@email.com"),
-    ("Zerobin Pastebin", "https://www.0bin.net/"),  # Thanks the authors :)
+    # correctly to the user using JS, e.g. ("Contact", "mailto:you@example.com")
 )
 
 # Size limit of the paste content in bytes. Be careful, allowing a size too big can

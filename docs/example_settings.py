@@ -46,12 +46,10 @@ GROUP = None
 # Any link with "mailto:" will be escaped to prevent spam
 
 MENU = (
-    ("Github", "https://github.com/Tygs/0bin"),
+    ("Github", "https://github.com/jaonoctus/0bin"),
     ("Faq", "/faq/"),  # You probably want to keep this
     # Any link with "mailto:" will be escaped to limit spam, but displayed
-    # correctly to the user using JS.
-    ("Contact", "mailto:your@email.com"),
-    ("Zerobin Pastebin", "https://www.0bin.net/"),  # Thanks the authors :)
+    # correctly to the user using JS, e.g. ("Contact", "mailto:you@example.com")
 )
 
 # limit size of pasted text in bytes. Be careful allowing too much size can slow down user's

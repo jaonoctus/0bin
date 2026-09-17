@@ -66,7 +66,7 @@
       <h4>How can I get 0bin?</h4>
 
          <p>0bin is an open-source project, and the code is hosted on <a
-               href="https://github.com/sametmax/0bin">GitHub</a>.
+               href="https://github.com/jaonoctus/0bin">GitHub</a>.
             You can either download a tarball or clone the repository.</p>
 
 </div>
