@@ -124,6 +124,9 @@ def create_paste():
         return {"status": "error", "message": "Wrong data payload."}
 
     expiration = request.forms.get("expiration", "burn_after_reading")
+    if expiration != "burn_after_reading" and expiration not in Paste.DURATIONS:
+        return {"status": "error", "message": "Wrong expiration value."}
+
     title = request.forms.get("title", "")
     btc_tip_address = request.forms.get("btcTipAddress", "")
 

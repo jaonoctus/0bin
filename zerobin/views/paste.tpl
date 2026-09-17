@@ -162,7 +162,6 @@
             <option value="burn_after_reading">Burn after reading</option>
             <option selected value="1_day">Expire in 1 day</option>
             <option value="1_month">Expire in 1 month</option>
-            <option value="never">Never expire</option>
           </select>
           <div class="input-group-append">
             <button type="submit" class="btn btn-primary">Submit</button>
@@ -223,7 +222,6 @@
             <option value="burn_after_reading">Burn after reading</option>
             <option selected value="1_day">Expire in 1 day</option>
             <option value="1_month">Expire in 1 month</option>
-            <option value="never">Never expire</option>
           </select>
           <div class="input-group-append">
             <button type="submit" class="btn btn-primary">Submit</button>
