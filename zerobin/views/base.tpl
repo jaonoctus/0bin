@@ -125,7 +125,7 @@
   <script src="/static/js/main.min.js?{{ STATIC_VERSION }}"></script>
   %else:
   <script src="/static/js/vue.js"></script>
-  <script src="/static/js/noble-ciphers.js"></script>
+  <script src="/static/js/noble.js?{{ STATIC_VERSION }}"></script>
   <script src="/static/js/zerobin-crypto.js?{{ STATIC_VERSION }}"></script>
   <script src="/static/js/behavior.js?{{ STATIC_VERSION }}"></script>
   <script src="/static/js/prettify.min.js"></script>

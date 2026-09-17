@@ -48,6 +48,7 @@ def static_files_version():
         "css/style.min.css",
         "css/style.css",
         "js/main.min.js",
+        "js/noble.js",
         "js/zerobin-crypto.js",
         "js/behavior.js",
     ):

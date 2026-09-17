@@ -35,7 +35,7 @@
       @keydown.ctrl.enter="encryptAndSendPaste()"></textarea>
 
     <div class="paste-options">
-      <h6>Optional fields (those are <em>not</em> encrypted):</h6>
+      <h6>Optional fields (title and tip address are <em>not</em> encrypted):</h6>
 
       <div class="input-group mb-3">
         <div class="input-group-prepend">
@@ -57,6 +57,15 @@
         <input type="text" class="form-control paste-btc-tip-address" name="paste-btc-tip-address"
           placeholder="Put a BTC address to ask for a tip. Leave it empty to let us use our."
           v-model="newPaste.btcTipAddress" maxlength="128">
+      </div>
+
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Passphrase</span>
+        </div>
+        <input type="password" class="form-control paste-password" name="paste-password"
+          placeholder="Optional. Readers will need it in addition to the link. It never leaves your browser."
+          v-model="newPaste.password" autocomplete="new-password">
       </div>
 
     </div>

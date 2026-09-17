@@ -250,10 +250,11 @@ h1 {
 margin-left: 8px;
 }
 
-.paste-options span {
+.paste-options span,
+.password-prompt .input-group-text {
   background-color: #3c4a59;
   color: #f9fafc;
-  width: 70px;
+  width: 110px;
 }
 
 .paste-options:hover{

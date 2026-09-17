@@ -32,7 +32,7 @@ zerobin clean-expired-pastes --dry-run --verbose
 # Rebuild minified assets (needs `uglifyjs` on PATH and the pyScss module)
 doit compress          # runs compress.sh -> static/js/main.min.js, static/css/style.min.css
 ./compress.sh          # same thing, directly
-./vendor_noble_ciphers.sh   # rebuild static/js/noble-ciphers.js from npm (needs node)
+./vendor_noble.sh      # rebuild static/js/noble.js from npm (needs node)
 
 # Packaging / release (see dodo.py)
 doit build             # compress + generate MANIFEST.in + bdist_wheel into dist/
@@ -103,13 +103,16 @@ in-memory set to avoid repeated `isdir` calls.
 
 **Client side** (`zerobin/static/js/behavior.js`, one file): a Vue 2 instance mounted on
 `#app` plus a `window.zerobin` utility object. Vue delimiters are switched to `{% %}` because
-Bottle templates own `{{ }}`. Crypto lives in `zerobin-crypto.js`, a DOM-free module over
-the vendored `noble-ciphers.js` bundle (rebuilt from npm by `vendor_noble_ciphers.sh`).
-Flow on create: generate a random 32-byte key (unpadded base64url), optionally downscale
-images via canvas, encrypt with XChaCha20-Poly1305 and a fresh 24-byte nonce into
-`{"v":2,"cipher":"xchacha20poly1305","nonce":...,"ct":...}`, POST form-encoded to
-`/paste/create`, then redirect to `/paste/<id>#<key>`. The server rejects payloads that do
-not start with that prefix as a cheap "looks encrypted" check. Pastes from the older SJCL
+Bottle templates own `{{ }}`. Crypto lives in `zerobin-crypto.js`, a DOM-free, Promise-based
+module over the vendored `noble.js` bundle of @noble/ciphers and @noble/hashes (rebuilt from
+npm by `vendor_noble.sh`). Flow on create: generate a random 32-byte key (unpadded
+base64url), optionally downscale images via canvas, encrypt with XChaCha20-Poly1305 and a
+fresh 24-byte nonce into `{"v":2,"cipher":"xchacha20poly1305","nonce":...,"ct":...}`, POST
+form-encoded to `/paste/create`, then redirect to `/paste/<id>#<key>`. With an optional
+passphrase (called `password` in the code) the key is Argon2id(passphrase, salt = URL key)
+instead and the payload carries a `kdf` member; the paste page detects it and shows a prompt
+before decrypting. The passphrase never leaves the browser. The server rejects payloads that do not start with the
+`{"v":2,"cipher":...` prefix as a cheap "looks encrypted" check. Pastes from the older SJCL
 format (`{"iv":`) are detected client side and reported as unreadable. On display, the key is read from `location.hash` and never sent;
 content is decrypted, syntax-highlighted with prettify, and the URL (with `?owner_key=`) is
 stored in localStorage for the "previous pastes" menu. Owner key is what authorizes

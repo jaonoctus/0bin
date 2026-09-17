@@ -59,6 +59,7 @@ Other features
 - automatic code coloration (no need to specify the language);
 - pastebin expiration: 1 day or 1 month;
 - burn after reading: the paste is destroyed after the first reading;
+- optional passphrase: readers need it in addition to the link;
 - clone paste: you can't edit a paste, but you can duplicate any of them;
 - code upload: if a file is too big, you can upload it instead of using copy/paste;
 - copy paste to clipboard in a click;

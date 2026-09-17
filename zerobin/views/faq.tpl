@@ -10,6 +10,11 @@
             the paste with XChaCha20-Poly1305, thanks to the
             <a href="https://github.com/paulmillr/noble-ciphers">noble-ciphers</a>
             JavaScript library.</p>
+         <p>You can also set an optional passphrase when creating a paste. The
+            encryption key is then derived from both the link and the passphrase with
+            <a href="https://en.wikipedia.org/wiki/Argon2">Argon2id</a>, so the link
+            alone is not enough to read the paste. The passphrase never leaves your
+            browser.</p>
          <p>The encrypted content is then sent to the server, which returns the
             address of the newly created paste.</p>
          <p>The JavaScript code redirects to this address, but it adds the

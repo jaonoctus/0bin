@@ -79,7 +79,23 @@
     <span id="expiration-tag">Expire {{ expiration }}</span>
     %end
 
-    <pre id="paste-content" class="prettyprint" v-if="!readerMode">
+    <!-- Not a <form>: this sits inside the paste form and forms cannot nest -->
+    <div class="password-prompt" v-if="passwordRequired">
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <span class="input-group-text">Passphrase</span>
+        </div>
+        <input type="password" class="form-control" id="paste-password" v-model="passwordInput"
+          placeholder="This paste is protected by a passphrase" autocomplete="current-password"
+          :disabled="isLoading" @keydown.enter.prevent="unlockPaste()">
+        <div class="input-group-append">
+          <button type="button" class="btn btn-primary" :disabled="isLoading || !passwordInput"
+            @click.prevent="unlockPaste()">Unlock</button>
+        </div>
+      </div>
+      <p class="alert alert-danger" v-if="passwordError">{% passwordError %}</p>
+    </div>
+    <pre id="paste-content" class="prettyprint" v-if="!readerMode" v-show="!passwordRequired">
         <code>
           {{ paste.content }}
         </code>
@@ -186,7 +202,7 @@
       <textarea rows="10" style="width:100%;" class=" form-control" @keydown.ctrl.enter="encryptAndSendPaste()"
         id="content" name="content"></textarea>
       <div class="paste-options">
-        <h6>Optional fields (those are <em>not</em> encrypted):</h6>
+        <h6>Optional fields (title and tip address are <em>not</em> encrypted):</h6>
 
         <div class="input-group mb-3">
           <div class="input-group-prepend">
@@ -208,6 +224,15 @@
           <input type="text" class="form-control paste-btc-tip-address" name="paste-btc-tip-address"
             placeholder="Put a BTC address to ask for a tip. Leave it empty to let us use our."
             v-model="newPaste.btcTipAddress" maxlength="128">
+        </div>
+
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text">Passphrase</span>
+          </div>
+          <input type="password" class="form-control paste-password" name="paste-password"
+            placeholder="Optional. Readers will need it in addition to the link. It never leaves your browser."
+            v-model="newPaste.password" autocomplete="new-password">
         </div>
 
       </div>

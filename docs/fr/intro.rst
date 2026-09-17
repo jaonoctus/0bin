@@ -40,6 +40,7 @@ Autres fonctionalités
 - coloration syntaxique automatique (pas besoin de la spécifier);
 - expiration du pastebin: 1 jour ou 1 mois;
 - autodesctruction: le paste est détruit à la première lecture;
+- phrase de passe optionnelle: elle est demandée en plus du lien pour lire le paste;
 - clone d'un paste: pas d'édition possible, mais on peut dupliquer un paste;
 - upload du code: si le fichier est gros, on peut l'uploader d'un coup
   plutôt qu'utiliser le copier/coller;

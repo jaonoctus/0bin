@@ -38,8 +38,13 @@ var app = new Vue({
       expiration: '1_day',
       content: '',
       title: '',
-      btcTipAddress: ''
+      btcTipAddress: '',
+      password: ''
     },
+    /** Passphrase protected paste being read */
+    passwordRequired: false,
+    passwordInput: '',
+    passwordError: '',
     messages: [],
     /** Check for browser support of the named featured. Store the result
     and add a class to the html tag with the result */
@@ -71,6 +76,12 @@ var app = new Vue({
     isLoading: false
   },
   methods: {
+
+    unlockPaste: function () {
+      if (this.passwordInput) {
+        startDecryption(this.passwordInput);
+      }
+    },
 
     toggleReaderMode: function () {
       if (!this.readerMode) {
@@ -126,6 +137,7 @@ var app = new Vue({
       content.dispatchEvent(new Event('change'));
       this.newPaste.title = this.currentPaste.title;
       this.newPaste.btcTipAddress = this.currentPaste.btcTipAddress;
+      this.newPaste.password = '';
     },
 
     handleCancelClone: function () {
@@ -311,10 +323,10 @@ var app = new Vue({
           }
 
           promise.then(function (plainText) {
-              zerobin.encrypt(key, plainText,
+              zerobin.encrypt(key, plainText, app.newPaste.password,
 
                 function () {
-                  bar.set('Encrypting...', '65%')
+                  bar.set(app.newPaste.password ? 'Deriving key from passphrase...' : 'Encrypting...', '65%')
                 },
 
                 /* This block deals with sending the data, redirection or error handling */
@@ -412,53 +424,42 @@ var app = new Vue({
 window.zerobin = {
   version: '0.2.0',
 
-  /** Encrypt content with zerobinCrypto. encryptCallback runs first, then
-      doneCallback receives the payload, each in a timed continuation to give
-      the UI a chance to redraw. On failure errorCallback gets the error and
-      doneCallback is not called.
+  /** Encrypt content with zerobinCrypto, with an optional password.
+      encryptCallback runs first, in a timed continuation to give the UI a
+      chance to redraw, then doneCallback receives the payload. On failure
+      errorCallback gets the error and doneCallback is not called.
   */
-  encrypt: function (key, content, encryptCallback, doneCallback, errorCallback) {
+  encrypt: function (key, content, password, encryptCallback, doneCallback, errorCallback) {
     setTimeout(function () {
       if (encryptCallback) {
         encryptCallback();
       }
-      setTimeout(function () {
-        var payload;
-        try {
-          payload = zerobinCrypto.encrypt(key, content);
-        } catch (err) {
-          if (errorCallback) {
-            errorCallback(err);
-          }
-          return;
-        }
+      zerobinCrypto.encrypt(key, content, password).then(function (payload) {
         if (doneCallback) {
           doneCallback(payload);
         }
-      }, 50);
+      }, function (err) {
+        if (errorCallback) {
+          errorCallback(err);
+        }
+      });
     }, 50);
   },
 
   /** Decrypt a paste payload with zerobinCrypto, in a timed continuation to
       give the UI a chance to redraw. doneCallback receives the clear text,
-      errorCallback the error. Pastes written by the old SJCL based format get
-      an error flagged with `legacy`.
+      errorCallback the error: flagged `legacy` for the old SJCL format,
+      `passwordRequired` or `wrongPassword` for password protected pastes.
   */
-  decrypt: function (key, content, errorCallback, doneCallback) {
+  decrypt: function (key, content, password, errorCallback, doneCallback) {
     setTimeout(function () {
-      var clearText;
-      try {
-        if (zerobinCrypto.isLegacyPayload(content)) {
-          var legacyError = new Error('Legacy paste format');
-          legacyError.legacy = true;
-          throw legacyError;
-        }
-        clearText = zerobinCrypto.decrypt(key, content);
-      } catch (err) {
-        errorCallback(err);
+      if (zerobinCrypto.isLegacyPayload(content)) {
+        var legacyError = new Error('Legacy paste format');
+        legacyError.legacy = true;
+        errorCallback(legacyError);
         return;
       }
-      doneCallback(clearText);
+      zerobinCrypto.decrypt(key, content, password).then(doneCallback, errorCallback);
     }, 50);
   },
 
@@ -747,28 +748,32 @@ window.zerobin = {
 */
 
 var pasteContent = document.querySelector('#paste-content');
-var content = '';
+// Named distinctly: `content` is reused further down for the textarea element
+var encryptedPayload = '';
 
 if (pasteContent) {
-  content = pasteContent.textContent.trim();
+  encryptedPayload = pasteContent.textContent.trim();
   app.currentPaste.id = zerobin.getPasteId(window.location);
 }
 
 var key = zerobin.getPasteKey();
-var error = false;
+var form = document.querySelectorAll('input, textarea, select, button');
+var bar = null;
 
-if (content && key) {
+/** Decrypt the paste with the URL key and, for password protected pastes, the
+    password typed by the reader. Called at load, or from the password prompt. */
+function startDecryption(password) {
 
-  var form = document.querySelectorAll('input, textarea, select, button');
   form.forEach(function (node) {
     node.disabled = true;
   });
 
-  var bar = zerobin.progressBar('.well form .progress');
+  bar = bar || zerobin.progressBar('.well form .progress');
   app.isLoading = true;
-  bar.set('Decrypting paste...', '25%');
+  app.passwordError = '';
+  bar.set(password ? 'Deriving key from passphrase...' : 'Decrypting paste...', '25%');
 
-  zerobin.decrypt(key, content,
+  zerobin.decrypt(key, encryptedPayload, password,
 
     /* On error*/
     function (err) {
@@ -777,6 +782,9 @@ if (content && key) {
         zerobin.message('danger',
           'This paste was encrypted by an older version of 0bin and cannot be read anymore.',
           'Error');
+      } else if (err && err.wrongPassword) {
+        app.passwordError = 'Wrong passphrase, please try again.';
+        app.passwordInput = '';
       } else {
         zerobin.message('danger', 'Could not decrypt data (Wrong key ?)', 'Error');
       }
@@ -785,6 +793,7 @@ if (content && key) {
     /* When done */
     function (content) {
 
+      app.passwordRequired = false;
       var readerMode = false;
 
       if (content.indexOf('data:image') == 0) {
@@ -869,7 +878,20 @@ if (content && key) {
       }, 100);
 
     });
+}
 
+if (encryptedPayload && key) {
+  if (zerobinCrypto.needsPassword(encryptedPayload)) {
+    app.passwordRequired = true;
+    app.$nextTick(function () {
+      var input = document.getElementById('paste-password');
+      if (input) {
+        input.focus();
+      }
+    });
+  } else {
+    startDecryption('');
+  }
 } /* End of "DECRYPTION" */
 
 window.onload = function () {
@@ -919,11 +941,11 @@ if (app.support.localStorage) {
 if (app.support.fileUpload) {
 
   // Implements drag & drop upload
-  var content = document.getElementById('content');
-  content.addEventListener('drop', zerobin.handleDrop);
-  content.addEventListener('paste', zerobin.handlePaste);
-  content.addEventListener('dragover', zerobin.handleDragOver);
-  content.addEventListener('dragleave', zerobin.handleDragLeave);
+  var uploadArea = document.getElementById('content');
+  uploadArea.addEventListener('drop', zerobin.handleDrop);
+  uploadArea.addEventListener('paste', zerobin.handlePaste);
+  uploadArea.addEventListener('dragover', zerobin.handleDragOver);
+  uploadArea.addEventListener('dragleave', zerobin.handleDragLeave);
 
 }
 
