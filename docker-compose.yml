@@ -1,0 +1,38 @@
+services:
+  zerobin:
+    build: .
+    image: zerobin:local
+    container_name: zerobin
+    restart: unless-stopped
+    ports:
+      - "3255:3255"
+    environment:
+      ZEROBIN_HOST: "0.0.0.0"
+      ZEROBIN_PORT: "3255"
+      # Set to "true" for auto-reload and unminified assets. Not for production.
+      ZEROBIN_DEBUG: "false"
+      # Other supported overrides:
+      # ZEROBIN_MAX_SIZE, ZEROBIN_PASTE_ID_LENGTH,
+      # ZEROBIN_DISPLAY_COUNTER, ZEROBIN_REFRESH_COUNTER
+    volumes:
+      # Pastes, counter, and admin sessions (under /data/0bin).
+      - zerobin-data:/data
+      # settings.py, secret_key, admin_password, custom_views/ (under /config/0bin).
+      # The secret key derives the admin URL and every paste's owner key,
+      # so keep this volume if you want those to survive a recreate.
+      - zerobin-config:/config
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3255/faq/')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  zerobin-data:
+  zerobin-config:
+
+# Useful one-offs:
+#   docker compose exec zerobin python -m zerobin infos
+#   docker compose exec zerobin python -m zerobin set-admin-password 'secret'
+#   docker compose exec zerobin python -m zerobin clean-expired-pastes --dry-run --verbose
