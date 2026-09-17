@@ -903,7 +903,8 @@ window.onload = function () {
 
   var btcTipAddress = document.querySelector('.btc-tip-address');
   if (btcTipAddress) {
-    app.currentPaste.btcTipAddress = btcTipAddress.innerText;
+    // The visible label may be shortened, the full address is in data-address
+    app.currentPaste.btcTipAddress = btcTipAddress.dataset.address || btcTipAddress.innerText.trim();
   }
 
 }
