@@ -6,8 +6,9 @@
 
       <h4>How does 0bin work?</h4>
 
-         <p>A random key is generated and used to encrypt the paste, thanks to
-            the <a href="http://crypto.stanford.edu/sjcl/">sjcl</a>
+         <p>A random 256-bit key is generated in your browser and used to encrypt
+            the paste with XChaCha20-Poly1305, thanks to the
+            <a href="https://github.com/paulmillr/noble-ciphers">noble-ciphers</a>
             JavaScript library.</p>
          <p>The encrypted content is then sent to the server, which returns the
             address of the newly created paste.</p>

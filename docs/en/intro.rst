@@ -16,7 +16,7 @@ How it works
 When creating the paste:
 
 - the browser generate a random key;
-- the pasted content is encrypted with this key using AES256;
+- the pasted content is encrypted with this key using XChaCha20-Poly1305;
 - the encrypted pasted content is sent to the server;
 - the browser receives the paste URL and add the key in the URL hash (#).
 
@@ -53,7 +53,7 @@ Technologies used
 
 - Python_
 - `The Bottle Python Web microframework`_
-- SJCL_ (js crypto tools)
+- noble-ciphers_ (js crypto tools)
 - jQuery_
 - Bootstrap_, the Twitter HTML5/CSS3 framework
 - VizHash.js_ to create visual hashes from pastes
@@ -81,7 +81,7 @@ What does 0bin not implement?
 .. _zerobin project: https://github.com/sebsauvage/ZeroBin/
 .. _Python: https://en.wikipedia.org/wiki/Python_(programming_language)
 .. _The Bottle Python Web microframework: http://bottlepy.org/
-.. _SJCL: http://crypto.stanford.edu/sjcl/
+.. _noble-ciphers: https://github.com/paulmillr/noble-ciphers
 .. _jQuery: http://jquery.com/
 .. _Bootstrap: http://twitter.github.com/bootstrap/
 .. _VizHash.js: https://github.com/sametmax/VizHash.js

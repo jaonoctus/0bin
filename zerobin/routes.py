@@ -47,6 +47,9 @@ app = Bottle()
 
 ADMIN_LOGIN_URL = settings.ADMIN_URL + "login/"
 
+# Start of the JSON payload produced by static/js/zerobin-crypto.js
+ENCRYPTED_PAYLOAD_PREFIX = '{"v":2,"cipher":"xchacha20poly1305"'
+
 
 @app.route("/")
 @view("home")
@@ -117,10 +120,12 @@ def logout():
 @app.post("/paste/create")
 def create_paste():
 
-    # Reject what is too small, too big, or what does not seem encrypted to
-    # limit a abuses
+    # Reject what is too small, too big, or what does not look like a payload
+    # produced by zerobin-crypto.js, to limit abuses
     content = request.forms.get("content", "")
-    if '{"iv":' not in content or not (0 < len(content) < settings.MAX_SIZE):
+    if not content.startswith(ENCRYPTED_PAYLOAD_PREFIX) or not (
+        0 < len(content) < settings.MAX_SIZE
+    ):
         return {"status": "error", "message": "Wrong data payload."}
 
     expiration = request.forms.get("expiration", "burn_after_reading")

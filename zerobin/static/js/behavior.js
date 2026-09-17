@@ -1,4 +1,4 @@
-/*global sjcl:true, jQuery:true, lzw:true, zerobin:true, prettyPrint:true */
+/*global Vue:true, zerobinCrypto:true, zerobin:true, prettyPrint:true */
 
 /*
   This file has been migrated away from jQuery, to Vue. Because of the way
@@ -6,9 +6,6 @@
    DOM manipulation instead of the Vue declarative style. We haven't had the
    time to rewrite it completly and it's a bit of a mixed bag at the moment.
 */
-
-/* Start random number generator seeding ASAP */
-sjcl.random.startCollectors();
 
 // Vue template syntax conflicts with bottle template syntax
 Vue.options.delimiters = ['{%', '%}'];
@@ -295,7 +292,16 @@ var app = new Vue({
         */
         try {
 
-          var key = zerobin.makeKey(256);
+          var key = zerobinCrypto.makeKey();
+
+          var onEncryptionError = function (err) {
+            form.forEach(function (node) {
+              node.disabled = false;
+            });
+            app.isLoading = false;
+            zerobin.message('danger', 'Paste could not be encrypted. Aborting.',
+              'Error');
+          };
 
           var promise = new Promise(function (resolve, reject) {
             resolve(paste);
@@ -304,17 +310,11 @@ var app = new Vue({
             promise = app.compressImage(paste);
           }
 
-          promise.then(function (base64) {
-              zerobin.encrypt(key, base64,
+          promise.then(function (plainText) {
+              zerobin.encrypt(key, plainText,
 
                 function () {
-                  bar.set('Encoding to base64...', '45%')
-                },
-                function () {
-                  bar.set('Compressing...', '65%')
-                },
-                function () {
-                  bar.set('Encrypting...', '85%')
+                  bar.set('Encrypting...', '65%')
                 },
 
                 /* This block deals with sending the data, redirection or error handling */
@@ -387,17 +387,10 @@ var app = new Vue({
                       'Error');
                   });
 
-                })
-            }),
-            function (err) {
-              debugger;
-              form.forEach(function (node) {
-                node.disabled = false;
-              });
-              app.isLoading = false;
-              zerobin.message('danger', 'Paste could not be encrypted. Aborting.',
-                'Error');
-            };
+                },
+
+                onEncryptionError);
+            }, onEncryptionError);
 
         } catch (err) {
           form.forEach(function (node) {
@@ -417,136 +410,56 @@ var app = new Vue({
  ****************************/
 
 window.zerobin = {
-  /** Base64 + compress + encrypt, with callbacks before each operation,
-      and all of them are executed in a timed continuation to give
-      a change to the UI to respond.
+  version: '0.2.0',
+
+  /** Encrypt content with zerobinCrypto. encryptCallback runs first, then
+      doneCallback receives the payload, each in a timed continuation to give
+      the UI a chance to redraw. On failure errorCallback gets the error and
+      doneCallback is not called.
   */
-  version: '0.1.1',
-  encrypt: function (key, content, toBase64Callback,
-    compressCallback, encryptCallback, doneCallback) {
-
+  encrypt: function (key, content, encryptCallback, doneCallback, errorCallback) {
     setTimeout(function () {
-
-      content = sjcl.codec.utf8String.toBits(content);
-      if (toBase64Callback) {
-        toBase64Callback();
+      if (encryptCallback) {
+        encryptCallback();
       }
-
       setTimeout(function () {
-
-        content = sjcl.codec.base64.fromBits(content);
-        if (compressCallback) {
-          compressCallback();
-        }
-
-        setTimeout(function () {
-
-          // content = lzw.compress(content); // Create a bug with JPG
-          if (encryptCallback) {
-            encryptCallback();
+        var payload;
+        try {
+          payload = zerobinCrypto.encrypt(key, content);
+        } catch (err) {
+          if (errorCallback) {
+            errorCallback(err);
           }
-
-          setTimeout(function () {
-            try {
-              content = sjcl.encrypt(key, content);
-            } catch (e) {
-
-              document.querySelectorAll('input, textarea, select, button').forEach(function (node) {
-                node.disabled = true
-              });
-
-              app.isLoading = false;
-
-              zerobin.message('danger', 'Paste could not be encrypted. Aborting.',
-                'Error');
-            }
-            if (doneCallback) {
-              doneCallback(content);
-            }
-          }, 50);
-
-        }, 50);
-
+          return;
+        }
+        if (doneCallback) {
+          doneCallback(payload);
+        }
       }, 50);
-
     }, 50);
   },
 
-  /** Base64 decoding + uncompress + decrypt, with callbacks before each operation,
-    and all of them are executed in a timed continuation to give
-    a change to the UI to respond.
-
-    This is where using a library to fake synchronicity could start to be
-    useful, this code is starting be difficult to read. If anyone read this
-    and got a suggestion, by all means, speak your mind.
+  /** Decrypt a paste payload with zerobinCrypto, in a timed continuation to
+      give the UI a chance to redraw. doneCallback receives the clear text,
+      errorCallback the error. Pastes written by the old SJCL based format get
+      an error flagged with `legacy`.
   */
-  decrypt: function (key, content, errorCallback, uncompressCallback,
-    fromBase64Callback, toStringCallback, doneCallback) {
-
-    /* Decrypt */
+  decrypt: function (key, content, errorCallback, doneCallback) {
     setTimeout(function () {
+      var clearText;
       try {
-        content = sjcl.decrypt(key, content);
-        if (uncompressCallback) {
-          uncompressCallback();
+        if (zerobinCrypto.isLegacyPayload(content)) {
+          var legacyError = new Error('Legacy paste format');
+          legacyError.legacy = true;
+          throw legacyError;
         }
-
-        /* Decompress */
-        setTimeout(function () {
-          try {
-
-            if (fromBase64Callback) {
-              fromBase64Callback();
-            }
-
-            /* From base 64 to bits */
-            setTimeout(function () {
-              try {
-                content = sjcl.codec.base64.toBits(content);
-                if (toStringCallback) {
-                  toStringCallback();
-                }
-
-                /* From bits to string */
-                setTimeout(function () {
-                  try {
-                    content = sjcl.codec.utf8String.fromBits(content);
-                    if (doneCallback) {
-                      doneCallback(content);
-                    }
-                  } catch (err) {
-                    debugger;
-                    errorCallback(err);
-                  }
-
-                }, 50); /* "End of from bits to string" */
-
-              } catch (err) {
-                errorCallback(err);
-              }
-
-            }, 50); /* End of "from base 64 to bits" */
-
-          } catch (err) {
-            errorCallback(err);
-          }
-
-        }, 50); /* End of "decompress" */
-
+        clearText = zerobinCrypto.decrypt(key, content);
       } catch (err) {
         errorCallback(err);
+        return;
       }
-
-    }, 50); /* End of "decrypt" */
-  },
-
-  /** Create a random base64-like string long enought to be suitable as
-      an encryption key */
-  makeKey: function (entropy) {
-    entropy = Math.ceil(entropy / 6) * 6; /* non-6-multiple produces same-length base64 */
-    var key = sjcl.bitArray.clamp(
-      sjcl.random.randomWords(Math.ceil(entropy / 32), 0), entropy);
-    return sjcl.codec.base64.fromBits(key, 0).replace(/\=+$/, '').replace(/\//, '-');
+      doneCallback(clearText);
+    }, 50);
   },
 
   getFormatedDate: function (date) {
@@ -858,20 +771,15 @@ if (content && key) {
   zerobin.decrypt(key, content,
 
     /* On error*/
-    function () {
+    function (err) {
       app.isLoading = false;
-      zerobin.message('danger', 'Could not decrypt data (Wrong key ?)', 'Error');
-    },
-
-    /* Update progress bar */
-    function () {
-      bar.set('Decompressing...', '45%');
-    },
-    function () {
-      bar.set('Base64 decoding...', '65%');
-    },
-    function () {
-      bar.set('From bits to string...', '85%');
+      if (err && err.legacy) {
+        zerobin.message('danger',
+          'This paste was encrypted by an older version of 0bin and cannot be read anymore.',
+          'Error');
+      } else {
+        zerobin.message('danger', 'Could not decrypt data (Wrong key ?)', 'Error');
+      }
     },
 
     /* When done */

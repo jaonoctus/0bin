@@ -42,12 +42,13 @@ cat /dev/null >$MAIN_JS_OUTPUT
 echo $'\n''/* Vue */' >>$MAIN_JS_OUTPUT
 uglifyjs $JSDIR'vue.js' >>$MAIN_JS_OUTPUT
 
-# strip the "use strict" statement because it will apply to all the files
-# TODO: file a bug report to SJCL to invite them to use the function syntax
-echo $'\n''/* SJCL */' >>$MAIN_JS_OUTPUT
-uglifyjs $JSDIR'sjcl.js' | sed 's/"use strict";//' >>$MAIN_JS_OUTPUT
+# Built and minified by vendor_noble_ciphers.sh. It is modern JS that uglifyjs
+# may not parse, so it is concatenated as is.
+echo $'\n''/* @noble/ciphers */' >>$MAIN_JS_OUTPUT
+cat $JSDIR'noble-ciphers.js' >>$MAIN_JS_OUTPUT
 
 echo $'\n''/* Our own JS */' >>$MAIN_JS_OUTPUT
+uglifyjs $JSDIR'zerobin-crypto.js' >>$MAIN_JS_OUTPUT
 uglifyjs $JSDIR'behavior.js' >>$MAIN_JS_OUTPUT
 
 echo $'\n''/* Prettify */' >>$MAIN_JS_OUTPUT

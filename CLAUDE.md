@@ -32,6 +32,7 @@ zerobin clean-expired-pastes --dry-run --verbose
 # Rebuild minified assets (needs `uglifyjs` on PATH and the pyScss module)
 doit compress          # runs compress.sh -> static/js/main.min.js, static/css/style.min.css
 ./compress.sh          # same thing, directly
+./vendor_noble_ciphers.sh   # rebuild static/js/noble-ciphers.js from npm (needs node)
 
 # Packaging / release (see dodo.py)
 doit build             # compress + generate MANIFEST.in + bdist_wheel into dist/
@@ -102,11 +103,14 @@ in-memory set to avoid repeated `isdir` calls.
 
 **Client side** (`zerobin/static/js/behavior.js`, one file): a Vue 2 instance mounted on
 `#app` plus a `window.zerobin` utility object. Vue delimiters are switched to `{% %}` because
-Bottle templates own `{{ }}`. Flow on create: generate a 256-bit key with SJCL, optionally
-downscale images via canvas, encrypt with `sjcl.encrypt` (LZW compression is commented out
-because it corrupted JPEGs), POST form-encoded to `/paste/create`, then redirect to
-`/paste/<id>#<key>`. The server rejects payloads not containing `{"iv":` as a cheap
-"looks encrypted" check. On display, the key is read from `location.hash` and never sent;
+Bottle templates own `{{ }}`. Crypto lives in `zerobin-crypto.js`, a DOM-free module over
+the vendored `noble-ciphers.js` bundle (rebuilt from npm by `vendor_noble_ciphers.sh`).
+Flow on create: generate a random 32-byte key (unpadded base64url), optionally downscale
+images via canvas, encrypt with XChaCha20-Poly1305 and a fresh 24-byte nonce into
+`{"v":2,"cipher":"xchacha20poly1305","nonce":...,"ct":...}`, POST form-encoded to
+`/paste/create`, then redirect to `/paste/<id>#<key>`. The server rejects payloads that do
+not start with that prefix as a cheap "looks encrypted" check. Pastes from the older SJCL
+format (`{"iv":`) are detected client side and reported as unreadable. On display, the key is read from `location.hash` and never sent;
 content is decrypted, syntax-highlighted with prettify, and the URL (with `?owner_key=`) is
 stored in localStorage for the "previous pastes" menu. Owner key is what authorizes
 `DELETE /paste/<id>` from the browser. Much of the DOM handling is still imperative

@@ -27,7 +27,7 @@
 
     <div :class="{'topnav': true, 'reader-mode': readerMode}" @mouseleave="openPreviousPastesMenu =false">
       <a class="brand" href="/"><span>ø</span>bin<em>.net</em></a>
-      <span class="tagline">"A client side encrypted PasteBin"<br><span>All pastes are AES256 encrypted, we cannot know
+      <span class="tagline">"A client side encrypted PasteBin"<br><span>All pastes are XChaCha20-Poly1305 encrypted, we cannot know
           what you paste...</span>
       </span>
 
@@ -125,7 +125,8 @@
   <script src="/static/js/main.min.js?{{ VERSION }}"></script>
   %else:
   <script src="/static/js/vue.js"></script>
-  <script src="/static/js/sjcl.js"></script>
+  <script src="/static/js/noble-ciphers.js"></script>
+  <script src="/static/js/zerobin-crypto.js?{{ VERSION }}"></script>
   <script src="/static/js/behavior.js?{{ VERSION }}"></script>
   <script src="/static/js/prettify.min.js"></script>
   %end

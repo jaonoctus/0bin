@@ -35,7 +35,7 @@ How it works
 When creating the paste:
 
 - the browser generates a random key;
-- the pasted content is encrypted with this key using AES256;
+- the pasted content is encrypted with this key using XChaCha20-Poly1305;
 - the encrypted pasted content is sent to the server;
 - the browser receives the paste URL and adds the key in the URL hash (#).
 
