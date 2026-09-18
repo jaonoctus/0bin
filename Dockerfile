@@ -12,7 +12,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     XDG_DATA_HOME=/data \
     XDG_CONFIG_HOME=/config
 # ZEROBIN_*_DIR is only read by `runserver`. The other subcommands (infos,
-# set-admin-password, ...) resolve <XDG_*_HOME>/0bin through appdirs, so the
+# clean-expired-pastes, ...) resolve <XDG_*_HOME>/0bin through appdirs, so the
 # XDG variables are set to make every subcommand agree on the same paths.
 
 WORKDIR /app

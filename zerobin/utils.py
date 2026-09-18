@@ -1,4 +1,3 @@
-import hashlib
 import secrets
 
 from pathlib import Path
@@ -79,7 +78,6 @@ def ensure_app_context(data_dir=None, config_dir=None):
         - a var dir
         - a content dir
         - a secret key
-        - an admin URL
 
         This function is idempotent if nothing touch the files it created.
     """
@@ -97,9 +95,6 @@ def ensure_app_context(data_dir=None, config_dir=None):
     settings.PASTE_FILES_ROOT = settings.DATA_DIR / "pastes"
     settings.PASTE_FILES_ROOT.mkdir(exist_ok=True)
 
-    settings.SESSIONS_DIR = settings.DATA_DIR / "sessions"
-    settings.SESSIONS_DIR.mkdir(exist_ok=True)
-
     bottle.TEMPLATE_PATH.insert(0, zerobin.ROOT_DIR / "views")
 
     CUSTOM_VIEWS_DIR = settings.CONFIG_DIR / "custom_views"
@@ -114,16 +109,6 @@ def ensure_app_context(data_dir=None, config_dir=None):
         secret_key_file.write_text(secrets.token_urlsafe(64))
     settings.SECRET_KEY = secret_key_file.read_text()
 
-    admin_password_file = settings.CONFIG_DIR / "admin_password"
-    if not secret_key_file.is_file():
-        admin_password_file.write_text(
-            "No password set. Use the set_admin_passord command. Don't write this file by hand."
-        )
-    settings.ADMIN_PASSWORD_FILE = admin_password_file
-
-    payload = ("admin" + settings.SECRET_KEY).encode("ascii")
-    settings.ADMIN_URL = "/admin/" + hashlib.sha256(payload).hexdigest() + "/"
-
     settings_file = settings.CONFIG_DIR / "settings.py"
     if not settings_file.is_file():
         default_config = (zerobin.ROOT_DIR / "default_settings.py").read_text()
@@ -131,21 +116,4 @@ def ensure_app_context(data_dir=None, config_dir=None):
 
     settings.update_with_file(settings_file)
 
-
-def hash_password(password):
-    return hashlib.scrypt(
-        password.encode("utf8"),
-        salt=settings.SECRET_KEY.encode("ascii"),
-        n=16384,
-        r=8,
-        p=1,
-        dklen=32,
-    )
-
-
-def check_password(password):
-    try:
-        return settings.ADMIN_PASSWORD_FILE.read_bytes() == hash_password(password)
-    except (FileNotFoundError, AttributeError):
-        return False
 

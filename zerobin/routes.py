@@ -6,8 +6,6 @@ import os
 
 from distutils.util import strtobool
 
-from urllib.parse import urlparse
-
 from datetime import datetime, timedelta
 
 import hashlib
@@ -19,16 +17,12 @@ from bottle import (
     view,
     request,
     HTTPResponse,
-    redirect,
 )
-
-from beaker.middleware import SessionMiddleware
 
 from zerobin import __version__
 from zerobin.utils import (
     SettingsValidationError,
     ensure_app_context,
-    check_password,
     settings,
 )
 from zerobin.paste import Paste
@@ -67,8 +61,6 @@ GLOBAL_CONTEXT = {
 
 app = Bottle()
 
-ADMIN_LOGIN_URL = settings.ADMIN_URL + "login/"
-
 # Start of the JSON payload produced by static/js/zerobin-crypto.js
 ENCRYPTED_PAYLOAD_PREFIX = '{"v":2,"cipher":"xchacha20poly1305"'
 
@@ -83,60 +75,6 @@ def index():
 @view("faq")
 def faq():
     return GLOBAL_CONTEXT
-
-@app.get(settings.ADMIN_URL)
-@app.post(settings.ADMIN_URL)
-@view("admin")
-def admin():
-    session = request.environ.get("beaker.session")
-    if not session or not session.get("is_authenticated"):
-        redirect(ADMIN_LOGIN_URL)
-
-    paste_id = request.forms.get("paste", "")
-    if paste_id:
-        try:
-            if "/paste/" in paste_id:
-                paste_id = urlparse(paste_id).path.split("/paste/")[-1]
-            paste = Paste.load(paste_id)
-            paste.delete()
-        except (TypeError, ValueError, FileNotFoundError):
-            return {
-                "status": "error",
-                "message": f"Cannot find paste '{paste_id}'",
-                **GLOBAL_CONTEXT,
-            }
-
-        return {"status": "ok", "message": "Paste deleted", **GLOBAL_CONTEXT}
-
-    return {"status": "ok", "message": "", **GLOBAL_CONTEXT}
-
-
-@app.get(ADMIN_LOGIN_URL)
-@app.post(ADMIN_LOGIN_URL)
-@view("login")
-def login():
-
-    password = request.forms.get("password")
-    if password:
-        if not check_password(password):
-            return {"status": "error", "message": "Wrong password", **GLOBAL_CONTEXT}
-
-        session = request.environ.get("beaker.session")
-        session["is_authenticated"] = True
-        session.save()
-
-        redirect(settings.ADMIN_URL)
-
-    return {"status": "ok", **GLOBAL_CONTEXT}
-
-
-@app.post(settings.ADMIN_URL + "logout/")
-@view("logout")
-def logout():
-    session = request.environ.get("beaker.session")
-    session["is_authenticated"] = False
-    session.save()
-    redirect("/")
 
 
 @app.post("/paste/create")
@@ -278,17 +216,3 @@ def get_app(debug=None, config_dir="", data_dir=""):
         raise SettingsValidationError("PASTE_ID_LENGTH cannot be lower than 4")
 
     return settings, app
-
-
-app = SessionMiddleware(
-    app,
-    {
-        "session.type": "file",
-        "session.cookie_expires": 300,
-        "session.data_dir": settings.SESSIONS_DIR,
-        "session.auto": True,
-        # Beaker defaults to pickle for session files (CVE-2013-7489). The
-        # session only stores a boolean, so JSON is enough and safe.
-        "session.data_serializer": "json",
-    },
-)

@@ -15,11 +15,11 @@ services:
       # ZEROBIN_MAX_SIZE, ZEROBIN_PASTE_ID_LENGTH,
       # ZEROBIN_DISPLAY_COUNTER, ZEROBIN_REFRESH_COUNTER
     volumes:
-      # Pastes, counter, and admin sessions (under /data/0bin).
+      # Pastes and counter (under /data/0bin).
       - zerobin-data:/data
-      # settings.py, secret_key, admin_password, custom_views/ (under /config/0bin).
-      # The secret key derives the admin URL and every paste's owner key,
-      # so keep this volume if you want those to survive a recreate.
+      # settings.py, secret_key, custom_views/ (under /config/0bin).
+      # The secret key derives every paste's owner key, so keep this volume
+      # if you want those to survive a recreate.
       - zerobin-config:/config
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3255/faq/')"]
@@ -34,5 +34,4 @@ volumes:
 
 # Useful one-offs:
 #   docker compose exec zerobin python -m zerobin infos
-#   docker compose exec zerobin python -m zerobin set-admin-password 'secret'
 #   docker compose exec zerobin python -m zerobin clean-expired-pastes --dry-run --verbose

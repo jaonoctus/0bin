@@ -685,37 +685,6 @@ nav ul li a:hover {
   font-size: 18px;
 }
 
-/* Admin */
-
-.login-form {
-  width: 80%;
-  max-width: 500px;
-  margin: auto;
-}
-
-#password-field {
-  width: calc(100% - 65px);
-}
-
-.admin-header {
-  text-align: center;
-  font-size: 1.5em;
-  color: #f2f2f2;
-  margin: 20px 0px 20px 0px;
-  clear: both;
-}
-
-.admin-header svg {
-  font-size: 4em;
-  opacity: 0.3;
-}
-
 form {
   clear: both;
-}
-
-.logout svg {
-  width: 16px;
-  height: 16px;
-  margin: 0px 10px 2px 0px;
 }
