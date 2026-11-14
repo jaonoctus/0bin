@@ -7,11 +7,6 @@
    time to rewrite it completly and it's a bit of a mixed bag at the moment.
 */
 
-// Force focus for textarea (firefox hack)
-setTimeout(function () {
-  document.getElementById('content').focus();
-}, 100)
-
 var vueApp = Vue.createApp({
 
   data: function () {
@@ -419,6 +414,43 @@ var vueApp = Vue.createApp({
 
 // Vue template syntax conflicts with bottle template syntax
 vueApp.config.compilerOptions.delimiters = ['{%', '%}'];
+
+/** v-paste-area: everything the paste textarea needs, set up when Vue renders
+    it. Templates without a paste form (the FAQ) simply do not use it. */
+vueApp.directive('paste-area', {
+  mounted: function (el, binding) {
+    var vm = binding.instance;
+
+    // Force focus (firefox hack)
+    setTimeout(function () {
+      el.focus();
+    }, 100);
+
+    /* Autofit the height to the content */
+    el.style.height = el.scrollHeight + 'px';
+    el.style.overflowY = 'hidden';
+    el.addEventListener('input', function () {
+      el.style.height = 'auto';
+      el.style.height = el.scrollHeight + 'px';
+    });
+
+    /* Display bottom paste option buttons when needed */
+    ['keyup', 'change'].forEach(function (event) {
+      el.addEventListener(event, function () {
+        var height = parseFloat(getComputedStyle(el, null).height.replace("px", ""));
+        vm.displayBottomToolBar = height > 400;
+      });
+    });
+
+    /* Upload file using HTML5 File API: drag & drop and image paste */
+    if (vm.support.fileUpload) {
+      el.addEventListener('drop', function (e) { zerobin.handleDrop(e); });
+      el.addEventListener('paste', function (e) { zerobin.handlePaste(e); });
+      el.addEventListener('dragover', function (e) { zerobin.handleDragOver(e); });
+      el.addEventListener('dragleave', function (e) { zerobin.handleDragLeave(e); });
+    }
+  }
+});
 
 // `app` is the root component instance: its data and methods are used by the
 // imperative code below. Mounting compiles the content of #app-root as the
@@ -906,15 +938,6 @@ if (encryptedPayload && key) {
 
 window.onload = function () {
 
-  /* Display bottom paste option buttons when needed */
-  ["keyup", "change"].forEach(function (event) {
-    var content = document.getElementById("content");
-    content.addEventListener(event, function () {
-      var height = parseFloat(getComputedStyle(content, null).height.replace("px", ""))
-      app.displayBottomToolBar = height > 400;
-    })
-  })
-
   /* Remove expired pasted from history **/
   if (app.support.history && app.currentPaste.type === 'not_found') {
 
@@ -945,28 +968,4 @@ window.onload = function () {
 if (app.support.localStorage) {
   app.previousPastes = zerobin.getPreviousPastes();
   app.currentPaste.ownerKey = localStorage.getItem('zerobinV' + zerobin.version + "#" + zerobin.getPasteId(window.location) + "#owner_key");
-}
-
-/* Upload file using HTML5 File API */
-if (app.support.fileUpload) {
-
-  // Implements drag & drop upload
-  var uploadArea = document.getElementById('content');
-  uploadArea.addEventListener('drop', zerobin.handleDrop);
-  uploadArea.addEventListener('paste', zerobin.handlePaste);
-  uploadArea.addEventListener('dragover', zerobin.handleDragOver);
-  uploadArea.addEventListener('dragleave', zerobin.handleDragLeave);
-
-}
-
-/* Autofit text area height */
-var tx = document.getElementsByTagName('textarea');
-for (var i = 0; i < tx.length; i++) {
-  tx[i].setAttribute('style', 'height:' + (tx[i].scrollHeight) + 'px;overflow-y:hidden;');
-  tx[i].addEventListener("input", OnInput, false);
-}
-
-function OnInput() {
-  this.style.height = 'auto';
-  this.style.height = (this.scrollHeight) + 'px';
 }

@@ -200,7 +200,7 @@
 
     <div>
       <textarea rows="10" style="width:100%;" class=" form-control" @keydown.ctrl.enter="encryptAndSendPaste()"
-        id="content" name="content"></textarea>
+        id="content" name="content" v-paste-area></textarea>
       <div class="paste-options">
         <h6>Optional fields (title and tip address are <em>not</em> encrypted):</h6>
 

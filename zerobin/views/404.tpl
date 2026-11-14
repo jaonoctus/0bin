@@ -37,7 +37,7 @@
       <div class="progress-bar progress-bar-striped" role="progressbar"></div>
     </div>
     <textarea rows="10" style="width:100%;" class="form-control" id="content" name="content" autofocus
-      @keydown.ctrl.enter="encryptAndSendPaste()"></textarea>
+      v-paste-area @keydown.ctrl.enter="encryptAndSendPaste()"></textarea>
   </div>
 
   <div class="form-group select-date paste-option down" v-if="displayBottomToolBar">
