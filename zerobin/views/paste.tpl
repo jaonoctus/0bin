@@ -124,7 +124,7 @@
           {{ tip_label }}
         </a>
         <button v-if="support.clipboard" class="btn btn-secondary" @click.prevent="copyBTCAdressToClipboard()">
-          {% this.btcCopied ? "Copied :)" : "Copy"  %}
+          {% btcCopied ? "Copied :)" : "Copy"  %}
         </button>
       </div>
     </div>

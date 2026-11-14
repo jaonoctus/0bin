@@ -4,7 +4,7 @@
     <div>
       <div class="file-upload" v-if="support.fileUpload">
         <label type="button" class="btn btn-primary upload-file"
-          :disabled="isUploading">{% isUploading ? 'Uploading...': 'Upload file' %}
+          :disabled="isUploading || null">{% isUploading ? 'Uploading...': 'Upload file' %}
           <input type="file" class="hide-upload" id="file-upload" @change="handleUpload($event.target.files)">
         </label>
       </div>

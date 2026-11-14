@@ -32,6 +32,7 @@ zerobin clean-expired-pastes --dry-run --verbose
 doit compress          # runs compress.sh -> static/js/main.min.js, static/css/style.min.css
 ./compress.sh          # same thing, directly
 ./vendor_noble.sh      # rebuild static/js/noble.js from npm (needs node)
+./vendor_vue.sh        # fetch static/js/vue.js (dev) and vue.min.js (prod) from npm
 
 # Packaging / release (see dodo.py)
 doit build             # compress + generate MANIFEST.in + bdist_wheel into dist/
@@ -101,8 +102,13 @@ JSON metadata (title, btc tip address). The uuid is a truncated base64 SHA1 of t
 counter lives at `pastes/counter` guarded by `lockfile`. `Paste.DIR_CACHE` is a per-process
 in-memory set to avoid repeated `isdir` calls.
 
-**Client side** (`zerobin/static/js/behavior.js`, one file): a Vue 2 instance (2.7.16, the last 2.x release) mounted on
-`#app` plus a `window.zerobin` utility object. Vue delimiters are switched to `{% %}` because
+**Client side** (`zerobin/static/js/behavior.js`, one file): a Vue 3 app (options API,
+global build with the template compiler, fetched by `vendor_vue.sh`) plus a `window.zerobin`
+utility object. It mounts on `#app-root`, a bare wrapper in `base.tpl`: Vue 3 compiles only
+what is inside the mount element and ignores bindings on the element itself, so `#app` (which
+has a `:class`) lives inside it. The global `app` is the root component instance returned by
+`mount()`, which the imperative code reads and writes. The server-rendered HTML is the Vue
+template, so anything a template prints inside `#app-root` goes through the Vue compiler. Vue delimiters are switched to `{% %}` because
 Bottle templates own `{{ }}`. Crypto lives in `zerobin-crypto.js`, a DOM-free, Promise-based
 module over the vendored `noble.js` bundle of @noble/ciphers and @noble/hashes (rebuilt from
 npm by `vendor_noble.sh`). Flow on create: generate a random 32-byte key (unpadded

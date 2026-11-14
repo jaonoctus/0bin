@@ -7,73 +7,71 @@
    time to rewrite it completly and it's a bit of a mixed bag at the moment.
 */
 
-// Vue template syntax conflicts with bottle template syntax
-Vue.options.delimiters = ['{%', '%}'];
-
 // Force focus for textarea (firefox hack)
 setTimeout(function () {
   document.getElementById('content').focus();
 }, 100)
 
-var app = new Vue({
+var vueApp = Vue.createApp({
 
-  el: '#app',
-  data: {
-    previousPastes: [],
-    displayBottomToolBar: false,
-    openPreviousPastesMenu: false,
-    readerMode: false,
-    isUploading: false,
-    btcCopied: false,
-    currentPaste: {
-      ownerKey: '',
-      id: '',
-      type: '',
-      content: '',
-      downloadLink: {},
-      title: '',
-      btcTipAddress: ''
-    },
-    newPaste: {
-      expiration: '1_day',
-      content: '',
-      title: '',
-      btcTipAddress: '',
-      password: ''
-    },
-    /** Passphrase protected paste being read */
-    passwordRequired: false,
-    passwordInput: '',
-    passwordError: '',
-    messages: [],
-    /** Check for browser support of the named featured. Store the result
-    and add a class to the html tag with the result */
-    support: {
+  data: function () {
+    return {
+      previousPastes: [],
+      displayBottomToolBar: false,
+      openPreviousPastesMenu: false,
+      readerMode: false,
+      isUploading: false,
+      btcCopied: false,
+      currentPaste: {
+        ownerKey: '',
+        id: '',
+        type: '',
+        content: '',
+        downloadLink: {},
+        title: '',
+        btcTipAddress: ''
+      },
+      newPaste: {
+        expiration: '1_day',
+        content: '',
+        title: '',
+        btcTipAddress: '',
+        password: ''
+      },
+      /** Passphrase protected paste being read */
+      passwordRequired: false,
+      passwordInput: '',
+      passwordError: '',
+      messages: [],
+      /** Check for browser support of the named featured. Store the result
+      and add a class to the html tag with the result */
+      support: {
 
-      clipboard: !!(isSecureContext && navigator.clipboard && navigator.clipboard.writeText),
+        clipboard: !!(isSecureContext && navigator.clipboard && navigator.clipboard.writeText),
 
-      URLSearchParams: !!window.URLSearchParams,
+        URLSearchParams: !!window.URLSearchParams,
 
-      localStorage: (function () {
-        var val = !!(localStorage);
-        document.querySelector('html').classList.add((val ? '' : 'no-') + 'local-storage');
-        return val;
-      })(),
+        localStorage: (function () {
+          var val = !!(localStorage);
+          document.querySelector('html').classList.add((val ? '' : 'no-') + 'local-storage');
+          return val;
+        })(),
 
-      history: (function () {
-        var val = !!(window.history && history.pushState);
-        document.querySelector('html').classList.add((val ? '' : 'no-') + 'history');
-        return val;
-      })(),
+        history: (function () {
+          var val = !!(window.history && history.pushState);
+          document.querySelector('html').classList.add((val ? '' : 'no-') + 'history');
+          return val;
+        })(),
 
-      fileUpload: (function () {
-        var w = window;
-        var val = !!(w.File && w.FileReader && w.FileList && w.Blob);
-        document.querySelector('html').classList.add((val ? '' : 'no-') + 'file-upload');
-        return val;
-      })()
-    },
-    isLoading: false
+        fileUpload: (function () {
+          var w = window;
+          var val = !!(w.File && w.FileReader && w.FileList && w.Blob);
+          document.querySelector('html').classList.add((val ? '' : 'no-') + 'file-upload');
+          return val;
+        })()
+      },
+      isLoading: false
+    };
   },
   methods: {
 
@@ -156,12 +154,14 @@ var app = new Vue({
       app.isUploading = false;
     },
 
-    handleForceColoration: function (e) {
+    dismissMessage: function (index) {
+      this.messages.splice(index, 1);
+    },
+
+    handleForceColoration: function () {
       var content = document.getElementById('paste-content');
       content.classList.add('linenums');
-      e.target.innerHTML = 'Applying coloration';
       prettyPrint();
-      e.target.parentNode.remove()
     },
 
     handleSendByEmail: function (e) {
@@ -415,7 +415,17 @@ var app = new Vue({
       }
     }
   }
-})
+});
+
+// Vue template syntax conflicts with bottle template syntax
+vueApp.config.compilerOptions.delimiters = ['{%', '%}'];
+
+// `app` is the root component instance: its data and methods are used by the
+// imperative code below. Mounting compiles the content of #app-root as the
+// template and renders it synchronously, so DOM lookups must come after this
+// line. Vue 3 does not process the mount element itself, which is why #app
+// (which has bindings) sits inside a bare wrapper.
+var app = vueApp.mount('#app-root');
 
 /****************************
  ****  0bin utilities    ****

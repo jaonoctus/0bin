@@ -23,6 +23,9 @@
 
 <body>
 
+  <!-- Vue 3 mounts on #app-root and only compiles what is inside it, so the
+       mount point is a bare wrapper and #app keeps its own bindings. -->
+  <div id="app-root">
   <div id="app" :class="{ 'reader-mode-bg': readerMode}">
 
     <div :class="{'topnav': true, 'reader-mode': readerMode}" @mouseleave="openPreviousPastesMenu =false">
@@ -88,12 +91,12 @@
       %end
 
 
-      <p :class="'alert alert-' + msg.type" v-for="msg in messages">
-        <a class="close" data-dismiss="alert" href="#" @click.prevent="$event.target.parentNode.remove()">×</a>
+      <p :class="'alert alert-' + msg.type" v-for="(msg, index) in messages">
+        <a class="close" data-dismiss="alert" href="#" @click.prevent="dismissMessage(index)">×</a>
         <strong class="title" v-if="msg.title" v-html="msg.title"></strong>
         <span class="message" v-html="msg.content"></span>
         <a v-if="msg.action.message" href="#"
-          @click.once.prevent="msg.action.callback($event)">{% msg.action.message %}</a>
+          @click.prevent="msg.action.callback($event); dismissMessage(index)">{% msg.action.message %}</a>
       </p>
 
       <div id='main'>{{!base}}</div>
@@ -119,6 +122,7 @@
       %end
     </footer>
 
+  </div>
   </div>
 
   %if not settings.DEBUG:

@@ -39,8 +39,10 @@ echo "Compressing JS..."
 
 cat /dev/null >$MAIN_JS_OUTPUT
 
+# Production build fetched by vendor_vue.sh. It is already minified, so it is
+# concatenated as is.
 echo $'\n''/* Vue */' >>$MAIN_JS_OUTPUT
-uglifyjs $JSDIR'vue.js' >>$MAIN_JS_OUTPUT
+cat $JSDIR'vue.min.js' >>$MAIN_JS_OUTPUT
 
 # Built and minified by vendor_noble.sh. It is modern JS that uglifyjs may not
 # parse, so it is concatenated as is.
