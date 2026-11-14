@@ -58,11 +58,17 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install 0bin
-        run: pip install -e .
-
-      # --skip-editable: zerobin itself is installed from the checkout.
-      - name: Audit the installed dependencies
+      # Audit what 0bin declares (and what those pull in), not the whole
+      # environment: the interpreter ships its own pip and setuptools, which
+      # are not dependencies of the app.
+      - name: Audit the declared dependencies
         run: |
+          python - <<'EOF' > requirements-audit.txt
+          import configparser
+          config = configparser.ConfigParser()
+          config.read("setup.cfg")
+          print(config["options"]["install_requires"].strip())
+          EOF
+          cat requirements-audit.txt
           pip install pip-audit
-          pip-audit --skip-editable
+          pip-audit -r requirements-audit.txt
