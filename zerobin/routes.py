@@ -128,7 +128,12 @@ def display_paste(paste_id):
     keep_alive = False
     try:
         paste = Paste.load(paste_id)
-        # Delete the paste if it expired:
+        # Delete the paste if it expired. This includes burn after reading
+        # pastes left unread for too long.
+        if paste.has_expired:
+            paste.delete()
+            raise ValueError()
+
         if not isinstance(paste.expiration, datetime):
             # burn_after_reading contains the paste creation date
             # if this read appends 10 seconds after the creation date
@@ -142,10 +147,6 @@ def display_paste(paste_id):
                 keep_alive = False
             if not keep_alive:
                 paste.delete()
-
-        elif paste.expiration < now:
-            paste.delete()
-            raise ValueError()
 
     except (TypeError, ValueError):
         return error404(ValueError)

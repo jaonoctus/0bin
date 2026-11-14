@@ -58,13 +58,64 @@ Other features
 
 - automatic code coloration (no need to specify the language);
 - pastebin expiration: 1 day or 1 month;
-- burn after reading: the paste is destroyed after the first reading;
+- burn after reading: the paste is destroyed after the first reading, or after
+  1 month if nobody reads it;
 - optional passphrase: readers need it in addition to the link;
 - clone paste: you can't edit a paste, but you can duplicate any of them;
 - code upload: if a file is too big, you can upload it instead of using copy/paste;
 - copy paste to clipboard in a click;
 - own previous pastes history;
 - reader mode;
+
+Hosting an instance
+===================
+
+0bin stores every paste as a file and does not limit or clean up anything by
+itself. If your instance is reachable by other people, set up both of the
+following, or anybody can fill your disk.
+
+**Rate limit paste creation.** Each :code:`POST /paste/create` stores up to
+:code:`MAX_SIZE` (1 MB by default) and needs no account, so put a reverse proxy
+in front of 0bin and throttle that route per client IP.
+
+The provided :code:`docker-compose.yml` does it for you: it runs Caddy with the
+`caddy-ratelimit`_ plugin in front of the application (see the :code:`caddy/`
+directory) and only publishes the proxy:
+
+::
+
+    docker compose up -d --build        # http://localhost:3255
+
+The default is 10 paste creations per minute per client IP (per /64 for IPv6).
+Change it with :code:`ZEROBIN_RATE_LIMIT_EVENTS` and
+:code:`ZEROBIN_RATE_LIMIT_WINDOW` in :code:`docker-compose.yml`. If another
+proxy or a tunnel sits in front of Caddy, it must pass the client address in
+:code:`X-Forwarded-For`, or all visitors will share one allowance.
+
+Any other proxy that can rate limit works as well, for example nginx with
+:code:`limit_req` or a rate limiting rule at your CDN. Stock Caddy can't: it
+needs the plugin.
+
+**Delete expired pastes on a schedule.** Expired pastes are only removed when
+somebody opens them. Everything else, including burn after reading pastes that
+nobody ever read, stays on disk until you run:
+
+::
+
+    python -m zerobin clean-expired-pastes
+
+Add :code:`--dry-run --verbose` to see what it would delete first. Run it
+every day, for example from cron (:code:`/etc/cron.d/0bin-clean`), here with
+the Docker setup above:
+
+::
+
+    17 4 * * * root /usr/bin/docker exec zerobin python -m zerobin clean-expired-pastes 2>&1 | /usr/bin/logger -t 0bin-clean
+
+Outside Docker, run the command as the user that runs the server. If you
+started the server with :code:`--data-dir` or :code:`ZEROBIN_DATA_DIR`, pass
+the same :code:`--data-dir` to the command: it does not read the environment
+variable.
 
 Known issues
 ============
@@ -79,6 +130,7 @@ Known issues
 .. _is not worth it: http://stackoverflow.com/questions/201705/how-many-random-elements-before-md5-produces-collisions
 .. _WTFPL licence: http://en.wikipedia.org/wiki/WTFPL
 .. _release: https://github.com/Tygs/0bin/releases
+.. _caddy-ratelimit: https://github.com/mholt/caddy-ratelimit
 
 Contributing
 =============

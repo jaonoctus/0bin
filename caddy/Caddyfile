@@ -1,0 +1,33 @@
+# Reverse proxy in front of 0bin. Its job is to throttle paste creation, which
+# the application itself does not limit: every POST stores up to MAX_SIZE
+# bytes on disk.
+{
+	admin off
+
+	servers {
+		# When the connection comes from a private address (another proxy or a
+		# tunnel on the same host or network), take the client IP from
+		# X-Forwarded-For. Strict mode reads it right to left, so a client
+		# cannot pick its own IP by sending the header itself.
+		trusted_proxies static private_ranges
+		trusted_proxies_strict
+	}
+}
+
+http://:3255 {
+	rate_limit {
+		zone paste_create {
+			match {
+				method POST
+				path /paste/create
+			}
+			key {client_ip}
+			events {$ZEROBIN_RATE_LIMIT_EVENTS:10}
+			window {$ZEROBIN_RATE_LIMIT_WINDOW:1m}
+			# One bucket per /64, or an IPv6 client could rotate addresses
+			ipv6_prefix 64
+		}
+	}
+
+	reverse_proxy zerobin:3255
+}
