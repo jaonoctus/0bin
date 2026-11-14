@@ -4,8 +4,10 @@ services:
     image: zerobin:local
     container_name: zerobin
     restart: unless-stopped
-    ports:
-      - "3255:3255"
+    # Not published: reach it through the proxy service below, which rate
+    # limits paste creation.
+    expose:
+      - "3255"
     environment:
       ZEROBIN_HOST: "0.0.0.0"
       ZEROBIN_PORT: "3255"
@@ -28,6 +30,21 @@ services:
       retries: 3
       start_period: 10s
 
+  # Caddy with the rate limit plugin. See caddy/Caddyfile.
+  proxy:
+    build: ./caddy
+    image: zerobin-proxy:local
+    container_name: zerobin-proxy
+    restart: unless-stopped
+    depends_on:
+      - zerobin
+    ports:
+      - "3255:3255"
+    environment:
+      # Paste creations allowed per client IP (per /64 for IPv6) in the window.
+      ZEROBIN_RATE_LIMIT_EVENTS: "10"
+      ZEROBIN_RATE_LIMIT_WINDOW: "1m"
+
 volumes:
   zerobin-data:
   zerobin-config:
@@ -35,3 +52,6 @@ volumes:
 # Useful one-offs:
 #   docker compose exec zerobin python -m zerobin infos
 #   docker compose exec zerobin python -m zerobin clean-expired-pastes --dry-run --verbose
+#
+# Schedule the cleaner (without --dry-run) every day, see "Hosting an instance"
+# in README.rst. Nothing else removes expired pastes that nobody opens.

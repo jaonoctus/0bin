@@ -46,6 +46,10 @@ docker compose up -d --build              # http://localhost:3255
 docker compose exec zerobin python -m zerobin infos
 ```
 
+The compose file puts a Caddy sidecar (`caddy/`, built with the caddy-ratelimit plugin) in
+front of the app and publishes only the proxy. It limits `POST /paste/create` per client IP
+(`ZEROBIN_RATE_LIMIT_EVENTS` per `ZEROBIN_RATE_LIMIT_WINDOW`); the app has no throttle of its own.
+
 **Python 3.10 to 3.11 only.** bleach 6.x needs 3.10+, and the app's own `distutils` imports
 (`strtobool` in `cli.py` and `routes.py`) break on 3.12. `setup.cfg` pins `sigtools<3`
 because clize 4.1.1 holds attrs at 19.x while letting sigtools float to 4.x, which needs
