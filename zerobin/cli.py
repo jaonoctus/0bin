@@ -177,6 +177,15 @@ def main():
         clize.util.name_py2cli(name)
         for name in clize.util.dict_from_names(subcommands).keys()
     ]
+    # bottle 0.13's reloader restarts `python -m zerobin <args>` as
+    # `python -m zerobin <path to __main__.py> <args>`. Drop the stray path so
+    # the reloaded child parses the same arguments as its parent.
+    if (
+        os.environ.get("BOTTLE_CHILD")
+        and len(sys.argv) > 1
+        and sys.argv[1] == sys.argv[0]
+    ):
+        del sys.argv[1]
     if len(sys.argv) < 2 or sys.argv[1] not in subcommand_names:
         sys.argv.insert(1, subcommand_names[0])
     clize.run(runserver, delete_paste, infos, clean_expired_pastes)

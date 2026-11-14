@@ -12,7 +12,7 @@ set -euo pipefail
 
 NOBLE_CIPHERS_VERSION="2.4.0"
 NOBLE_HASHES_VERSION="2.4.0"
-ESBUILD_VERSION="0.25.9"
+ESBUILD_VERSION="0.28.2"
 
 CURDIR=$(cd "$(dirname "$0")" && pwd)
 OUT="$CURDIR/zerobin/static/js/noble.js"
