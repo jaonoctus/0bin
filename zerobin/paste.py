@@ -24,6 +24,11 @@ class Paste(object):
         "1_month": 30 * 24 * 3600,
     }
 
+    # A burn after reading paste that nobody opened is treated as expired
+    # after this many seconds (the longest lifetime a timed paste can have),
+    # so that clean-expired-pastes can reclaim it.
+    BURN_AFTER_READING_MAX_AGE = max(DURATIONS.values())
+
     def __init__(
         self,
         uuid=None,
@@ -265,8 +270,33 @@ class Paste(object):
                     on_error(e)
 
     @property
-    def has_expired(self):
+    def burn_after_reading_created_at(self):
+        """
+            Return the creation date of a burn after reading paste, or None
+            if it can't be determined.
+
+            save() records it after the "#" of the expiration line. Fall back
+            on the file modification time if it is missing or malformed, so
+            that no stored paste can live forever.
+        """
         try:
+            created_at = str(self.expiration).split("#")[1]
+            return datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S.%f")
+        except (IndexError, ValueError):
+            pass
+        try:
+            return datetime.fromtimestamp(os.path.getmtime(self.path))
+        except OSError:
+            return None
+
+    @property
+    def has_expired(self):
+        if isinstance(self.expiration, datetime):
             return self.expiration < datetime.now()
-        except TypeError:
+
+        # burn_after_reading: expires when read, or when left unread too long
+        created_at = self.burn_after_reading_created_at
+        if created_at is None:
             return False
+        max_age = timedelta(seconds=self.BURN_AFTER_READING_MAX_AGE)
+        return created_at + max_age < datetime.now()
