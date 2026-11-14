@@ -45,3 +45,6 @@ dist
 
 package-lock.json
 node_modules
+
+# The browser test pins its dependencies: CI installs them with npm ci
+!tests/e2e/package-lock.json

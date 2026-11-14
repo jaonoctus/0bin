@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-test:
+    name: Browser test (debug=${{ matrix.debug }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # false: the committed minified bundles. true: the individual sources.
+        debug: ["false", "true"]
+    steps:
+      - uses: actions/checkout@v7
+
+      # 3.11 on purpose: the app imports distutils, which 3.12 removed.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install 0bin
+        run: pip install -e .
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+
+      - name: Install test dependencies
+        working-directory: tests/e2e
+        run: npm ci
+
+      # Uses the Chrome that ships with the runner image (see run.mjs).
+      - name: Run the browser test
+        env:
+          DEBUG: ${{ matrix.debug }}
+        run: tests/e2e/run.sh
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install 0bin
+        run: pip install -e .
+
+      # --skip-editable: zerobin itself is installed from the checkout.
+      - name: Audit the installed dependencies
+        run: |
+          pip install pip-audit
+          pip-audit --skip-editable

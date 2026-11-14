@@ -10,8 +10,11 @@ PRs. The code remains for self-hosting. Requires Python 3.7+. Licence: WTFPL.
 
 ## Commands
 
-There is no test suite, no CI, and no linter configuration beyond `.pylintrc` and `.editorconfig`
-(4-space Python, 2-space HTML/JS/CSS).
+There are no unit tests. The one test is a browser test (`tests/e2e/`, puppeteer-core driving
+a local Chrome) that exercises the whole client side flow against a real server. CI
+(`.github/workflows/ci.yml`) runs it on pushes to master and on pull requests, in both normal
+and debug mode, plus `pip-audit`. There is no linter configuration beyond `.pylintrc` and
+`.editorconfig` (4-space Python, 2-space HTML/JS/CSS).
 
 ```bash
 # Install for development (runtime deps from setup.cfg, build tooling from dev-requirements.txt)
@@ -22,6 +25,11 @@ pip install -r dev-requirements.txt      # doit, rcssmin, twine
 python -m zerobin --debug true
 # or, after `pip install -e .`:
 zerobin runserver --debug true --host 127.0.0.1 --port 3255
+
+# Browser test: starts a throwaway server on port 3299 and drives Chrome against it
+(cd tests/e2e && npm ci)                 # once
+tests/e2e/run.sh                         # minified bundles
+DEBUG=true tests/e2e/run.sh              # debug mode, individual sources
 
 # Other CLI subcommands (clize; `runserver` is the implicit default)
 zerobin infos                          # prints version, data dir, config dir, static dir

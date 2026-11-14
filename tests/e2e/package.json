@@ -1,0 +1,12 @@
+{
+  "name": "zerobin-e2e",
+  "private": true,
+  "description": "Browser test for 0bin. See run.sh.",
+  "type": "module",
+  "scripts": {
+    "test": "./run.sh"
+  },
+  "dependencies": {
+    "puppeteer-core": "25.17.0"
+  }
+}
