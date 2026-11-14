@@ -1,9 +1,9 @@
 #! /bin/bash
 
-export PYTHONWARNINGS=ignore::FutureWarning # scss prints future warnings
-
-python -c "import scss" || {
-    echo >&2 "Error: this script requires the scss python module. pip install -r dev-requirements.txt"
+# The stylesheets are plain CSS, so they only need minifying. rcssmin replaced
+# pyScss, which is unmaintained and crashes on Python 3.11.
+python -c "import rcssmin" || {
+    echo >&2 "Error: this script requires the rcssmin python module. pip install -r dev-requirements.txt"
     exit 1
 }
 
@@ -24,16 +24,16 @@ cat /dev/null >$CSS_OUTPUT
 echo "Compressing CSS..."
 
 echo $'\n''/* Prettify */' >>$CSS_OUTPUT
-python -m scss $CSSDIR'prettify.css' >>$CSS_OUTPUT
+python -m rcssmin <$CSSDIR'prettify.css' >>$CSS_OUTPUT
 
 echo $'\n''/* Desert prettify theme */' >>$CSS_OUTPUT
-python -m scss $CSSDIR'desert.css' >>$CSS_OUTPUT
+python -m rcssmin <$CSSDIR'desert.css' >>$CSS_OUTPUT
 
 echo $'\n''/* Bootswatch bootstrap theme */' >>$CSS_OUTPUT
-python -m scss $CSSDIR'bootswatch.4.5.css' >>$CSS_OUTPUT
+python -m rcssmin <$CSSDIR'bootswatch.4.5.css' >>$CSS_OUTPUT
 
 echo $'\n''/* Our own CSS */' >>$CSS_OUTPUT
-python -m scss $CSSDIR'style.css' >>$CSS_OUTPUT
+python -m rcssmin <$CSSDIR'style.css' >>$CSS_OUTPUT
 
 echo "Compressing JS..."
 
