@@ -38,7 +38,7 @@ def runserver(
     server="paste",
 ):
     if version:
-        print("0bin V%s" % settings.VERSION)
+        print("0bin V%s" % zerobin.__version__)
         sys.exit(0)
 
     try:
